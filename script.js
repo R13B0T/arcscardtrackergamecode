@@ -112,7 +112,7 @@ async function handleGameCode() {
     closeGameCodePrompt();
 }
 
-// Load card data from JSON file
+// Load card data from JSON file and show game code prompt
 fetch('cards.json')
     .then(response => response.json())
     .then(data => {
@@ -141,7 +141,7 @@ function initializeApp() {
             filterButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             currentFilter = button.getAttribute('data-color');
-            displayAllAssignedCards(currentFilter); // Show all assigned cards (Leader, Lore, Court)
+            displayAllAssignedCards(currentFilter);
         });
     });
 
@@ -157,7 +157,6 @@ function initializeApp() {
 
 // Function to display all cards of a certain type with current filters
 function displayAllCards(type) {
-    // Clear the search input
     document.getElementById('search-input').value = '';
 
     const cardList = document.getElementById('card-list');
@@ -172,21 +171,19 @@ function displayAllCards(type) {
     displayFilteredCards(filteredCards);
 }
 
-// New function to display all assigned cards (Leader, Lore, Court) for the selected player in specific order
+// Function to display all assigned cards (Leader, Lore, Court) for the selected player in specific order
 function displayAllAssignedCards(playerColor) {
     const cardList = document.getElementById('card-list');
     cardList.innerHTML = '';
 
-    // Filter all cards (Leader, Lore, Court) by the selected player color
     let assignedCards = cardData.filter(card => card.player === playerColor);
 
-    // Sort cards by type: Leader first, then Lore, then Court
     assignedCards.sort((a, b) => {
         const order = { 'leader': 1, 'lore': 2, 'court': 3 };
         return order[a.type] - order[b.type];
     });
 
-    displayFilteredCards(assignedCards); // Display all sorted cards
+    displayFilteredCards(assignedCards);
 }
 
 // Function to display filtered cards
@@ -198,25 +195,20 @@ function displayFilteredCards(cards) {
         const cardElement = document.createElement('div');
         cardElement.classList.add('card');
 
-        // Card Title
         const title = document.createElement('h2');
         title.textContent = card.title;
         cardElement.appendChild(title);
 
-        // Card Description
         const description = document.createElement('div');
         description.classList.add('description');
         description.innerHTML = formatDescription(card.description);
         cardElement.appendChild(description);
 
-        // Player Picker (Assignment Buttons)
         const playerPicker = document.createElement('div');
         playerPicker.classList.add('player-picker');
 
-        // Define the options array based on card type
         let options = ['none', 'court', 'red', 'blue', 'gold', 'white'];
 
-        // Create assignment buttons
         options.forEach(optionValue => {
             const button = document.createElement('button');
             button.classList.add('assign-button', `${optionValue}-button`);
@@ -224,20 +216,13 @@ function displayFilteredCards(cards) {
             button.setAttribute('data-value', optionValue);
             button.setAttribute('aria-label', `Assign to ${optionValue.charAt(0).toUpperCase() + optionValue.slice(1)}`);
         
-            // Highlight the button if it's the current assignment
             if (card.player === optionValue) {
                 button.classList.add('active');
             }
         
-            // Add event listener for assignment
             button.addEventListener('click', () => {
-                // Update the card's player assignment
                 card.player = optionValue;
-        
-                // Save updated card data to Firestore
                 saveCardData();
-        
-                // Re-render the cards to reflect changes
                 displayAllCards(currentType);
             });
         
@@ -295,7 +280,7 @@ function resetSelections() {
     cardData.forEach(card => {
         card.player = 'none';
     });
-    saveCardData(); // Save updated card data to Firestore
+    saveCardData();
     currentFilter = null;
     filterButtons.forEach(btn => btn.classList.remove('active'));
     displayAllCards(currentType);
