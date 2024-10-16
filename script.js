@@ -55,6 +55,8 @@ async function createGameSession() {
         });
         gameCode = newGameRef.id;
         alert(`Game created! Share this code with others: ${gameCode}`);
+        closeGameCodePrompt(); // Close the modal
+        initializeApp(); // Load the card data to view
     } catch (error) {
         console.error("Error creating game session:", error);
     }
@@ -68,7 +70,8 @@ async function loadGameSession(code) {
         if (gameSnapshot.exists) {
             cardData = gameSnapshot.data().cards;
             gameCode = code;
-            initializeApp();
+            closeGameCodePrompt(); // Close the modal
+            initializeApp(); // Load the card data to view
         } else {
             alert('Game not found! Please check the game code.');
         }
@@ -105,14 +108,13 @@ async function handleGameCode() {
     const gameCodeInput = document.getElementById('game-code-input').value.trim();
 
     if (gameCodeInput) {
-        loadGameSession(gameCodeInput);
+        await loadGameSession(gameCodeInput);
     } else {
-        createGameSession();
+        await createGameSession();
     }
-    closeGameCodePrompt();
 }
 
-// Load card data from JSON file and show game code prompt
+// Load card data from JSON file
 fetch('cards.json')
     .then(response => response.json())
     .then(data => {
