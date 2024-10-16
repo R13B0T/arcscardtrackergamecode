@@ -1,3 +1,17 @@
+// Firebase configuration and initialization (ensure Firebase SDK is loaded in index.html)
+const firebaseConfig = {
+    apiKey: "AIzaSyDzW7DnZHz37xOyI6Nyp1SSq9gT1PxYjLI",
+    authDomain: "arcs-card-tracker-aee70.firebaseapp.com",
+    projectId: "arcs-card-tracker-aee70",
+    storageBucket: "arcs-card-tracker-aee70.appspot.com",
+    messagingSenderId: "1002391730061",
+    appId: "1:1002391730061:web:b51f03c462f55dae476fc4",
+    measurementId: "G-RVK40GKC8K"
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 // Variables for theme toggle
 const themeToggle = document.getElementById('theme-toggle');
 const body = document.body;
@@ -28,22 +42,82 @@ const navButtons = document.querySelectorAll('.nav-button');
 const filterButtons = document.querySelectorAll('.filter-button');
 let currentType = 'court';
 let currentFilter = null;
-
-// Card data will be loaded from cards.json
 let cardData = [];
+let gameCode = null; // Unique game code for the session
+
+// Function to create a new game session and save initial data to Firestore
+async function createGameSession() {
+    try {
+        const newGameRef = db.collection('gameSessions').doc(); // Auto-generate ID
+        await newGameRef.set({
+            cards: cardData,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        gameCode = newGameRef.id;
+        alert(`Game created! Share this code with others: ${gameCode}`);
+    } catch (error) {
+        console.error("Error creating game session:", error);
+    }
+}
+
+// Function to load an existing game session from Firestore
+async function loadGameSession(code) {
+    try {
+        const gameRef = db.collection('gameSessions').doc(code);
+        const gameSnapshot = await gameRef.get();
+        if (gameSnapshot.exists) {
+            cardData = gameSnapshot.data().cards;
+            gameCode = code;
+            initializeApp();
+        } else {
+            alert('Game not found! Please check the game code.');
+        }
+    } catch (error) {
+        console.error("Error loading game session:", error);
+    }
+}
+
+// Function to save card data to Firestore
+async function saveCardData() {
+    if (!gameCode) return;
+    try {
+        const gameRef = db.collection('gameSessions').doc(gameCode);
+        await gameRef.update({
+            cards: cardData
+        });
+    } catch (error) {
+        console.error("Error saving card data:", error);
+    }
+}
+
+// Functions for handling the game code modal
+function openGameCodePrompt() {
+    document.getElementById('game-code-prompt').style.display = 'block';
+    document.getElementById('dimmed-background').style.display = 'block';
+}
+
+function closeGameCodePrompt() {
+    document.getElementById('game-code-prompt').style.display = 'none';
+    document.getElementById('dimmed-background').style.display = 'none';
+}
+
+async function handleGameCode() {
+    const gameCodeInput = document.getElementById('game-code-input').value.trim();
+
+    if (gameCodeInput) {
+        loadGameSession(gameCodeInput);
+    } else {
+        createGameSession();
+    }
+    closeGameCodePrompt();
+}
 
 // Load card data from JSON file
 fetch('cards.json')
     .then(response => response.json())
     .then(data => {
-        // Load from localStorage if available
-        const savedData = localStorage.getItem('cardData');
-        if (savedData) {
-            cardData = JSON.parse(savedData);
-        } else {
-            cardData = data.cards;
-        }
-        initializeApp();
+        cardData = data.cards;
+        openGameCodePrompt(); // Open the modal to either create or join a game session
     })
     .catch(error => console.error('Error loading card data:', error));
 
@@ -120,7 +194,7 @@ function displayFilteredCards(cards) {
     const cardList = document.getElementById('card-list');
     cardList.innerHTML = '';
 
-    cards.forEach((card, index) => {
+    cards.forEach((card) => {
         const cardElement = document.createElement('div');
         cardElement.classList.add('card');
 
@@ -133,7 +207,6 @@ function displayFilteredCards(cards) {
         const description = document.createElement('div');
         description.classList.add('description');
         description.innerHTML = formatDescription(card.description);
-        description.style.display = card.player !== 'none' ? 'block' : 'none';
         cardElement.appendChild(description);
 
         // Player Picker (Assignment Buttons)
@@ -161,8 +234,8 @@ function displayFilteredCards(cards) {
                 // Update the card's player assignment
                 card.player = optionValue;
         
-                // Save updated card data to localStorage
-                localStorage.setItem('cardData', JSON.stringify(cardData));
+                // Save updated card data to Firestore
+                saveCardData();
         
                 // Re-render the cards to reflect changes
                 displayAllCards(currentType);
@@ -170,7 +243,6 @@ function displayFilteredCards(cards) {
         
             playerPicker.appendChild(button);
         });
-        
 
         cardElement.appendChild(playerPicker);
         cardList.appendChild(cardElement);
@@ -209,23 +281,21 @@ function formatDescription(text) {
         "Martyr (Move):",
         "Annex (Build):",
         "Guide (Move):",
-        // Add any other phrases you want to bold
     ];
 
     const escapedPhrases = phrasesToBold.map(phrase => phrase.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
     const pattern = '\\b(' + escapedPhrases.join('|') + ')';
     const regex = new RegExp(pattern, 'g');
 
-    const formattedText = text.replace(regex, '<strong>$1</strong>');
-    return formattedText;
-} 
+    return text.replace(regex, '<strong>$1</strong>');
+}
 
 // Function to reset all selections
 function resetSelections() {
     cardData.forEach(card => {
         card.player = 'none';
     });
-    localStorage.removeItem('cardData'); // Clear saved data
+    saveCardData(); // Save updated card data to Firestore
     currentFilter = null;
     filterButtons.forEach(btn => btn.classList.remove('active'));
     displayAllCards(currentType);
