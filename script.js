@@ -84,6 +84,7 @@ joinGameBtn.addEventListener('click', async () => {
         if (gameDoc.exists()) {
             cardData = gameDoc.data().cardData; // Load the game state from Firestore
             gameCode = enteredCode; // Set the current game code
+            console.log("Joined game, cardData:", cardData); // Debugging
             initializeApp(); // Re-initialize the app with the fetched card data
             alert(`Joined game with code: ${gameCode}`);
         } else {
@@ -128,7 +129,13 @@ fetch('cards.json')
 
 // Initialize the application after data is loaded
 function initializeApp() {
-    displayTestCard(); // TEMP: Display test card for debugging
+    console.log("Initializing App with card data:", cardData);  // Debugging
+
+    if (cardData.length === 0) {
+        console.log("No card data available to display.");
+    } else {
+        displayAllCards(currentType);  // Display cards
+    }
 
     // Event listeners for navigation buttons
     navButtons.forEach(button => {
@@ -157,30 +164,6 @@ function initializeApp() {
         const query = this.value.toLowerCase();
         filterCardsBySearch(query);
     });
-
-    // Initial display of cards
-    displayAllCards(currentType);
-}
-
-// Function to display a test card for debugging purposes
-function displayTestCard() {
-    const cardList = document.getElementById('card-list');
-    cardList.innerHTML = '';  // Clear the current cards
-
-    const cardElement = document.createElement('div');
-    cardElement.classList.add('card');
-
-    // Card Title
-    const title = document.createElement('h2');
-    title.textContent = "Test Card";
-    cardElement.appendChild(title);
-
-    // Card Description
-    const description = document.createElement('div');
-    description.textContent = "This is a test card description.";
-    cardElement.appendChild(description);
-
-    cardList.appendChild(cardElement);
 }
 
 // Function to display all cards of a certain type with current filters
@@ -190,6 +173,8 @@ function displayAllCards(type) {
 
     const cardList = document.getElementById('card-list');
     cardList.innerHTML = '';
+
+    console.log("Displaying cards for type:", type);  // Debugging
 
     let filteredCards = cardData.filter(card => card.type === type);
 
@@ -204,6 +189,8 @@ function displayAllCards(type) {
 function displayAllAssignedCards(playerColor) {
     const cardList = document.getElementById('card-list');
     cardList.innerHTML = '';
+
+    console.log("Displaying assigned cards for player:", playerColor);  // Debugging
 
     let assignedCards = cardData.filter(card => card.player === playerColor);
 
@@ -220,7 +207,13 @@ function displayFilteredCards(cards) {
     const cardList = document.getElementById('card-list');
     cardList.innerHTML = '';
 
-    cards.forEach((card, index) => {
+    if (cards.length === 0) {
+        console.log("No cards to display.");  // Debugging
+    } else {
+        console.log("Displaying filtered cards:", cards);  // Debugging
+    }
+
+    cards.forEach((card) => {
         const cardElement = document.createElement('div');
         cardElement.classList.add('card');
 
@@ -310,7 +303,7 @@ function formatDescription(text) {
 
     const formattedText = text.replace(regex, '<strong>$1</strong>');
     return formattedText;
-} 
+}
 
 // Function to reset all selections
 function resetSelections() {
