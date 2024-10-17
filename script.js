@@ -48,7 +48,7 @@ const joinGameBtn = document.getElementById('join-game-btn');
 const gamecodeInput = document.getElementById('gamecode-input');
 
 let gameCode = ''; // The current game code
-let cardData = [];
+let cardData = []; // Stores card data
 
 // Generate a random game code
 function generateGameCode() {
@@ -108,32 +108,28 @@ async function syncCardAssignments() {
     }
 }
 
-// Call this function whenever card assignments change
-// Example: After assigning a card to a player, call syncCardAssignments();
-
-// Variables for navigation and filtering
-const navButtons = document.querySelectorAll('.nav-button');
-const filterButtons = document.querySelectorAll('.filter-button');
-let currentType = 'court';
-let currentFilter = null;
+// Debugging: Log card data
+console.log("Card Data Loaded: ", cardData);
 
 // Load card data from JSON file
 fetch('cards.json')
     .then(response => response.json())
     .then(data => {
-        // Load from localStorage if available
         const savedData = localStorage.getItem('cardData');
         if (savedData) {
             cardData = JSON.parse(savedData);
         } else {
             cardData = data.cards;
         }
+        console.log("Card Data Loaded from JSON or Local Storage:", cardData); // Debugging
         initializeApp();
     })
     .catch(error => console.error('Error loading card data:', error));
 
 // Initialize the application after data is loaded
 function initializeApp() {
+    displayTestCard(); // TEMP: Display test card for debugging
+
     // Event listeners for navigation buttons
     navButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -166,6 +162,27 @@ function initializeApp() {
     displayAllCards(currentType);
 }
 
+// Function to display a test card for debugging purposes
+function displayTestCard() {
+    const cardList = document.getElementById('card-list');
+    cardList.innerHTML = '';  // Clear the current cards
+
+    const cardElement = document.createElement('div');
+    cardElement.classList.add('card');
+
+    // Card Title
+    const title = document.createElement('h2');
+    title.textContent = "Test Card";
+    cardElement.appendChild(title);
+
+    // Card Description
+    const description = document.createElement('div');
+    description.textContent = "This is a test card description.";
+    cardElement.appendChild(description);
+
+    cardList.appendChild(cardElement);
+}
+
 // Function to display all cards of a certain type with current filters
 function displayAllCards(type) {
     // Clear the search input
@@ -183,15 +200,13 @@ function displayAllCards(type) {
     displayFilteredCards(filteredCards);
 }
 
-// New function to display all assigned cards (Leader, Lore, Court) for the selected player in specific order
+// Function to display all assigned cards (Leader, Lore, Court) for the selected player
 function displayAllAssignedCards(playerColor) {
     const cardList = document.getElementById('card-list');
     cardList.innerHTML = '';
 
-    // Filter all cards (Leader, Lore, Court) by the selected player color
     let assignedCards = cardData.filter(card => card.player === playerColor);
 
-    // Sort cards by type: Leader first, then Lore, then Court
     assignedCards.sort((a, b) => {
         const order = { 'leader': 1, 'lore': 2, 'court': 3 };
         return order[a.type] - order[b.type];
@@ -236,23 +251,14 @@ function displayFilteredCards(cards) {
             button.setAttribute('data-value', optionValue);
             button.setAttribute('aria-label', `Assign to ${optionValue.charAt(0).toUpperCase() + optionValue.slice(1)}`);
         
-            // Highlight the button if it's the current assignment
             if (card.player === optionValue) {
                 button.classList.add('active');
             }
         
-            // Add event listener for assignment
             button.addEventListener('click', () => {
-                // Update the card's player assignment
                 card.player = optionValue;
-
-                // Sync to Firestore
                 syncCardAssignments();
-
-                // Save updated card data to localStorage
                 localStorage.setItem('cardData', JSON.stringify(cardData));
-        
-                // Re-render the cards to reflect changes
                 displayAllCards(currentType);
             });
         
@@ -296,7 +302,6 @@ function formatDescription(text) {
         "Martyr (Move):",
         "Annex (Build):",
         "Guide (Move):",
-        // Add any other phrases you want to bold
     ];
 
     const escapedPhrases = phrasesToBold.map(phrase => phrase.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
