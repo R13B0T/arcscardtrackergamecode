@@ -617,3 +617,34 @@ input:focus {
     outline: 2px dashed var(--accent-color);
     outline-offset: 4px;
 }
+
+/* Styling for the gamecode section */
+.gamecode-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.gamecode-section input, .gamecode-section button {
+    padding: 10px;
+    margin: 5px;
+    font-size: 16px;
+}
+
+#gamecode-input {
+    width: 200px;
+    text-align: center;
+}
+
+#host-game-btn, #join-game-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#host-game-btn:hover, #join-game-btn:hover {
+    background-color: #2980b9;
+}

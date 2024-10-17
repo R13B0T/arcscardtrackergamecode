@@ -2,6 +2,94 @@
 const themeToggle = document.getElementById('theme-toggle');
 const body = document.body;
 
+// Import the functions you need from the SDKs
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+
+// Your web app's Firebase configuration (Replace with your own Firebase project configuration)
+const firebaseConfig = {
+  apiKey: "AIzaSyDzW7DnZHz37xOyI6Nyp1SSq9gT1PxYjLI",
+  authDomain: "arcs-card-tracker-aee70.firebaseapp.com",
+  projectId: "arcs-card-tracker-aee70",
+  storageBucket: "arcs-card-tracker-aee70.appspot.com",
+  messagingSenderId: "1002391730061",
+  appId: "1:1002391730061:web:b51f03c462f55dae476fc4",
+  measurementId: "G-RVK40GKC8K"
+};
+
+// Initialize Firebase and Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app); // Initialize Firestore
+
+
+// Variables for game hosting/joining
+const hostGameBtn = document.getElementById('host-game-btn');
+const joinGameBtn = document.getElementById('join-game-btn');
+const gamecodeInput = document.getElementById('gamecode-input');
+
+let gameCode = ''; // The current game code
+
+// Generate a random game code
+function generateGameCode() {
+    return Math.random().toString(36).substr(2, 6).toUpperCase(); // Random 6-character code
+}
+
+// Host a game (create a new session)
+hostGameBtn.addEventListener('click', async () => {
+    gameCode = generateGameCode(); // Generate a new game code
+
+    try {
+        // Create a new game document in Firestore
+        await setDoc(doc(db, 'games', gameCode), {
+            cardData: cardData, // Save current card state
+            timestamp: new Date() // Store timestamp for session creation
+        });
+
+        alert(`Game hosted! Your game code is: ${gameCode}`);
+        // Now the host can continue to update the game state
+    } catch (error) {
+        console.error('Error hosting game:', error);
+    }
+});
+
+// Join a game (join an existing session)
+joinGameBtn.addEventListener('click', async () => {
+    const enteredCode = gamecodeInput.value.toUpperCase();
+
+    try {
+        // Fetch the game document from Firestore
+        const gameDoc = await getDoc(doc(db, 'games', enteredCode));
+
+        if (gameDoc.exists()) {
+            cardData = gameDoc.data().cardData; // Load the game state from Firestore
+            gameCode = enteredCode; // Set the current game code
+            initializeApp(); // Re-initialize the app with the fetched card data
+            alert(`Joined game with code: ${gameCode}`);
+        } else {
+            alert('Invalid game code. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error joining game:', error);
+    }
+});
+
+// Function to sync card assignments to Firestore
+async function syncCardAssignments() {
+    if (gameCode) {
+        try {
+            await updateDoc(doc(db, 'games', gameCode), {
+                cardData: cardData
+            });
+            console.log('Card assignments synced!');
+        } catch (error) {
+            console.error('Error syncing card assignments:', error);
+        }
+    }
+}
+
+// Call this function whenever card assignments change
+// Example: After assigning a card to a player, call syncCardAssignments();
+
 // Load theme preference from localStorage
 const savedTheme = localStorage.getItem('theme') || 'light';
 if (savedTheme === 'dark') {
