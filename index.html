@@ -11,11 +11,6 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
     <!-- Viewport Meta Tag for Mobile Devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Firebase SDK Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/9.x/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x/firebase-analytics.js"></script>
 </head>
 <body>
     <!-- Theme Toggle Button (Optional) -->
@@ -57,36 +52,7 @@
         <!-- Cards will be dynamically inserted here by script.js -->
     </main>
 
-    <!-- Game Code Modal (Hidden Initially) -->
-    <div id="game-code-prompt" class="game-code-prompt" style="display: none;">
-        <button class="close-button" onclick="closeGameCodePrompt()">&times;</button>
-        <h2>Join or Create a Game</h2>
-        <input type="text" id="game-code-input" class="game-code-input" placeholder="Enter game code or leave empty to create new">
-        <button onclick="handleGameCode()" class="game-code-button">Start Game</button>
-    </div>
-
-    <!-- Dimmed Background -->
-    <div id="dimmed-background" class="dimmed-background" style="display: none;"></div>
-
     <!-- JavaScript File -->
     <script src="script.js"></script>
-
-    <!-- Firebase Initialization Script -->
-    <script>
-        // Firebase configuration details
-        const firebaseConfig = {
-            apiKey: "AIzaSyDzW7DnZHz37xOyI6Nyp1SSq9gT1PxYjLI",
-            authDomain: "arcs-card-tracker-aee70.firebaseapp.com",
-            projectId: "arcs-card-tracker-aee70",
-            storageBucket: "arcs-card-tracker-aee70.appspot.com",
-            messagingSenderId: "1002391730061",
-            appId: "1:1002391730061:web:b51f03c462f55dae476fc4",
-            measurementId: "G-RVK40GKC8K"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        firebase.analytics();
-    </script>
 </body>
 </html>
