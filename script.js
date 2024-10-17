@@ -1,12 +1,8 @@
-// Variables for theme toggle
-const themeToggle = document.getElementById('theme-toggle');
-const body = document.body;
-
 // Import the functions you need from the SDKs
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
-// Your web app's Firebase configuration (Replace with your own Firebase project configuration)
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDzW7DnZHz37xOyI6Nyp1SSq9gT1PxYjLI",
   authDomain: "arcs-card-tracker-aee70.firebaseapp.com",
@@ -21,6 +17,30 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app); // Initialize Firestore
 
+// Variables for theme toggle
+const themeToggle = document.getElementById('theme-toggle');
+const body = document.body;
+
+// Load theme preference from localStorage
+const savedTheme = localStorage.getItem('theme') || 'light';
+if (savedTheme === 'dark') {
+    body.classList.add('dark-mode');
+    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+} else {
+    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+}
+
+// Event listener for theme toggle
+themeToggle.addEventListener('click', () => {
+    body.classList.toggle('dark-mode');
+    if (body.classList.contains('dark-mode')) {
+        localStorage.setItem('theme', 'dark');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+        localStorage.setItem('theme', 'light');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+});
 
 // Variables for game hosting/joining
 const hostGameBtn = document.getElementById('host-game-btn');
@@ -28,6 +48,7 @@ const joinGameBtn = document.getElementById('join-game-btn');
 const gamecodeInput = document.getElementById('gamecode-input');
 
 let gameCode = ''; // The current game code
+let cardData = [];
 
 // Generate a random game code
 function generateGameCode() {
@@ -90,35 +111,11 @@ async function syncCardAssignments() {
 // Call this function whenever card assignments change
 // Example: After assigning a card to a player, call syncCardAssignments();
 
-// Load theme preference from localStorage
-const savedTheme = localStorage.getItem('theme') || 'light';
-if (savedTheme === 'dark') {
-    body.classList.add('dark-mode');
-    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-} else {
-    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-}
-
-// Event listener for theme toggle
-themeToggle.addEventListener('click', () => {
-    body.classList.toggle('dark-mode');
-    if (body.classList.contains('dark-mode')) {
-        localStorage.setItem('theme', 'dark');
-        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-    } else {
-        localStorage.setItem('theme', 'light');
-        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-    }
-});
-
 // Variables for navigation and filtering
 const navButtons = document.querySelectorAll('.nav-button');
 const filterButtons = document.querySelectorAll('.filter-button');
 let currentType = 'court';
 let currentFilter = null;
-
-// Card data will be loaded from cards.json
-let cardData = [];
 
 // Load card data from JSON file
 fetch('cards.json')
@@ -248,7 +245,10 @@ function displayFilteredCards(cards) {
             button.addEventListener('click', () => {
                 // Update the card's player assignment
                 card.player = optionValue;
-        
+
+                // Sync to Firestore
+                syncCardAssignments();
+
                 // Save updated card data to localStorage
                 localStorage.setItem('cardData', JSON.stringify(cardData));
         
@@ -258,7 +258,6 @@ function displayFilteredCards(cards) {
         
             playerPicker.appendChild(button);
         });
-        
 
         cardElement.appendChild(playerPicker);
         cardList.appendChild(cardElement);
